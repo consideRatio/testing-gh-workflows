@@ -6,16 +6,16 @@ on:
       hub_1:
         description: 'Test description'
         required: true
-        type: boolean
+        type: string
       hub_2:
         description: 'Test description'
         required: true
-        type: boolean
+        type: string
 
 jobs:
   deploy_hub_1:
     runs-on: ubuntu-20.04
-    if: ${{ github.event.inputs.hub_1 }}
+    if: ${{ github.event.inputs.hub_1 == 'true' }}
 
     steps:
       - name: hub_1 deployed
@@ -25,7 +25,7 @@ jobs:
   deploy_hub_2:
     runs-on: ubuntu-20.04
     needs: deploy_hub_1
-    if: ${{ github.event.inputs.hub_2 }}
+    if: ${{ github.event.inputs.hub_2 == 'true' }}
 
     steps:
       - name: hub_2 deployed
