@@ -3,31 +3,38 @@ name: chain
 on:
   workflow_dispatch:
     inputs:
+      cluster:
+        description: 'The cluster to deploy hubs to'
+        required: true
+        type: string
       hub_1:
-        description: 'Test description'
+        description: 'The first hub to deploy'
         required: true
         type: string
       hub_2:
-        description: 'Test description'
+        description: 'The second (optional) hub to deploy'
         required: true
+        default: ""
         type: string
 
 jobs:
-  deploy_hub_1:
+  job_1:
     runs-on: ubuntu-20.04
-    if: ${{ github.event.inputs.hub_1 == 'true' }}
+    name: Deploy hub ${{ github.event.inputs.hub_2 }} to cluster ${{ github.event.inputs.cluster }}
 
     steps:
-      - name: hub_1 deployed
+      - name: Deploy hub ${{ github.event.inputs.hub_2 }} to cluster ${{ github.event.inputs.cluster }}
         run: |
-          echo hub_1 is deployed
+          echo Deploying hub ${{ github.event.inputs.hub_2 }} to cluster ${{ github.event.inputs.cluster }}...
   
-  deploy_hub_2:
+  job_2:
     runs-on: ubuntu-20.04
-    needs: deploy_hub_1
-    if: ${{ github.event.inputs.hub_2 == 'true' }}
+    name: Deploy hub ${{ github.event.inputs.hub_2 }} to cluster ${{ github.event.inputs.cluster }}
+    
+    needs: job_1
+    if: ${{ github.event.inputs.hub_2 != '' }}
 
     steps:
-      - name: hub_2 deployed
+      - name: Deploy hub ${{ github.event.inputs.hub_2 }} to cluster ${{ github.event.inputs.cluster }}
         run: |
-          echo hub_2 is deployed
+          echo Deploying hub ${{ github.event.inputs.hub_2 }} to cluster ${{ github.event.inputs.cluster }}...

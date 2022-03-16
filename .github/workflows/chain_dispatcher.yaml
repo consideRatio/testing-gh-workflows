@@ -23,18 +23,11 @@ jobs:
             -H "Authorization: token $WORKFLOW_PAT" \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/${{ github.repository }}/actions/workflows/21985128/dispatches \
-            -d '{"ref":"main","inputs":{"hub_1":"true","hub_2":"true"}}'
+            -d '{"ref":"main","inputs":{"cluster":"eriks_cluster","eriks_staging_hub":"true","eriks_prod_hub":"true"}}'
 
           curl \
             -X POST \
             -H "Authorization: token $WORKFLOW_PAT" \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/${{ github.repository }}/actions/workflows/21985128/dispatches \
-            -d '{"ref":"main","inputs":{"hub_1":"false","hub_2":"true"}}'
-
-          curl \
-            -X POST \
-            -H "Authorization: token $WORKFLOW_PAT" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/actions/workflows/21985128/dispatches \
-            -d '{"ref":"main","inputs":{"hub_1":"true","hub_2":"false"}}'
+            -d '{"ref":"main","inputs":{"cluster":"sarahs_cluster","hub_1":"sarahs_staging_hub","hub_2":"sarahs_prod_hub"}}'
