@@ -1,0 +1,20 @@
+name: chain dispatcher
+
+on:
+  workflow_dispatch:
+
+jobs:
+  initial-job:
+    runs-on: ubuntu-20.04
+    steps:
+      - run: |
+          curl \
+            -H "Accept: application/vnd.github.v3+json" \
+            ${{ github.api_url }}/repos/${{ github.repository }}/actions/workflows
+      - run: |
+          curl \
+            -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            ${{ github.api_url }}/repos/${{ github.repository }}/actions/workflows/4476169/dispatches \
+            -d '{"ref": "main", "inputs": { "hub_1": true, "hub_2": true }}'
+

@@ -1,0 +1,176 @@
+# This is a GitHub workflow defining a set of jobs with a set of steps.
+# ref: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
+#
+name: Test
+
+# Reference
+# - Context availability: https://docs.github.com/en/actions/learn-github-actions/contexts#context-availability
+# - 
+
+# Current situation
+#
+# 1. Workflow triggers
+# 2. One job definition -> multiple variations, one per cluster
+# 3. Each cluster job variation -> a single step to deploy all releases
+#
+# Notes:
+# 1. To run things in parallel, we need either:
+#    - separate workflows
+#    - separate jobs or job variations
+# 2. To run a workflow's jobs in an ordered sequence, we need:
+#    - separate jobs (non-dynamic) with needs
+# 3. To run workflows in an ordered sequence, we need:
+#    - separate workflows (non-dynamic) with workflow_run triggers
+#    - recursively dispatched workflows
+# 4. For a good GitHub UX, separate jobs should be part of a common workflow.
+# ---
+# Idea: Let one script dispatch one deployment workflow per cluster, we have no
+#       sequence needs between clusters.
+# Idea: For each dynamically dispatched cluster workflow, we have three
+#       predefined stages that can be populated with jobs
+# 
+#
+
+# Inspiration
+# 1. DAG (Directed Acyclic Graph)
+#    - Thanks to the "needs" field, we can compose DAGs just like you can in
+#      GitLab:
+#      https://about.gitlab.com/blog/2020/05/12/directed-acyclic-graph/#meet-directed-acyclic-graph
+# 2. Key issue: the needs list can't be dynamically set, and must point to
+#    hardcoded "root job" ids.
+
+
+# Insights
+# 1. No dynamic needs
+#    - To use a previous job's outputs, you must declare it under "needs".
+#    - This leads to a failure to dynamically set the needs based on previous
+#      jobs outputs that has influenced the current jobs matrix.
+# 2. A dynamic job ids
+#    - A job that run 
+# 3. Limited ways to do things in a sequence
+#    - A job can be run with multiple variations, but you can't have a "needs"
+#      depending on a specific variation. Specific job variations don't have an
+#      identifier.
+#    - With the "concurrency" feature, you can only specify a single concurrency
+#      group for a job. Also, they describe that ordering of jobs isn't
+#      guaranteed.
+#      https://docs.github.com/en/actions/using-jobs/using-concurrency
+#    - Reusable workflows have limitations that restrict their use to accomplish
+#      our goal of running jobs in a directed acyclic graph.
+#      https://docs.github.com/en/actions/using-workflows/reusing-workflows#limitations
+#    - Dispatching workflows dynamically, maybe...
+#      - requires permissions not available in pull_request triggered workflows
+#      - bypasses GitHub Action's UI, i think...
+
+# Strategy idea (per cluster)
+# - Fixed set of stages dynamically populated with jobs
+#   - The idea is to have a few job's with "needs" in a sequence, representing
+#     different stages that can be populated dynamically with jobs.
+#   - A downside of this is that we will delay all jobs in the later stages for
+#     any job that is slow in the previous stage.
+#   - Another downside is that is the complexity of any job failing in a
+#     previous stage could cause all jobs in a later stage to stop, and the only
+#     workaround would be to let each job manually figure those details out.
+#     This would mean we would bypass the logic of "did things work out".
+# - Concurrency feature
+#   - Because only one concurrency group can be used and ordering of job
+#     execution isn't guaranteed, this will fail. Also, if we did that, we would
+#     need to have a way to detect if a job has failed or not, which we cant do
+#     easily if they are all grouped in a single job definition.
+# - Recursive tree structure dispatcher
+#   - The idea is to recursively dispatch workflows.
+#   - Dispatched workflow must be able to:
+#     - job1: Install release
+#     - job2: Dispatch X dependent releases, needs job1
+#   - Drawbacks:
+#     - No overview of the deployment jobs dispatched via GitHub UI
+#     - Can't handle DAGs, only tree data structures because a DAG allows for
+#       something to have two separate dependencies while a tree data structure
+#       don't.
+# - Central DAG dispatcher
+#   - The idea is that we have a single job that dispatches other jobs and
+#     monitors their progress.
+#   - Technically, i don't know how to get feedback from the dispatched jobs.
+# - Chain workflow dispatcher
+#   - The idea is to let a workflow trigger X jobs, one per cluster.
+#   - A cluster job will have steps to deploy support (optional), deploy common
+#     staging (optional), and then to dispatch a set of chain workflows to
+#     execute in parallel. Each chain workflow should be able to deploy a
+#     staging+prod combination.
+#   - Verification:
+#     - To verify this, the critical step is to demonstrate ability to dispatch
+#       X number of workflows, where X is decided programmatically.
+#
+
+
+# Example installation graph for a specific cluster
+#
+# - name: support
+#   dependents:
+#   - name: hub1-staging
+#     dependents:
+#     - name: hub1-prod
+#   - name: hub2-staging
+#     dependents:
+#     - name: hub2-prod
+#
+#  support --> hub1-staging --> hub1-prod
+#          |
+#          --> hub2-staging --> hub2-prod
+#
+#
+#
+
+on:
+  workflow_dispatch:
+
+jobs:
+  # This jobs 
+  initial-job:
+    runs-on: ubuntu-20.04
+    steps:
+      - id: get-matrix-include
+        run: |
+          echo '::set-output name=json::[
+              {
+                  "id": "support",
+                  "needs": [],
+                  "chart": "helm-charts/support",
+                  "values": ["file1.yaml"]
+              }
+          ]'
+    outputs:
+      # Each separate output must be a string! Convert your more complicated
+      # values into json strings first.
+      matrix-include-json: '${{ steps.get-matrix-include.outputs.json }}'
+
+  test-dynamic-matrix-values:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ needs.get-matrix-include.outputs.json }}
+    steps:
+      - run: |
+          echo '${{ toJson(matrix) }}'
+
+  test-complicated-matrix-values:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - my_string: "test"
+            my_number: 2
+            my_bool: true
+            my_json_string: '{"key": "value"}'
+            my_dict:
+              key: value
+            my_list:
+              - elem1
+              - elem2
+            my_needs:
+              - test
+    steps:
+      - run: |
+          echo '${{ toJson(matrix) }}'
