@@ -1,33 +1,112 @@
+# This workflow run X jobs, one per cluster.
+#
+# Each cluster-job will have sequential steps to deploy support (optional),
+# deploy common staging (optional), deploy common dask-staging (optional), and
+# then dispatch X workflows to execute in parallel from there on. Each
+# dispatched workflow can be able to deploy a staging+prod combination in
+# sequence.
+#
+# To verify this works:
+#
+# 1. Visit https://github.com/consideRatio/testing-gh-workflows/actions and
+#    click on the "chain dispatcher" workflow and then the "Run workflow" button
+#    to run it.
+# 2. Visit https://github.com/consideRatio/testing-gh-workflows/actions again
+#    and click on the "chain" workflow and then observe that two workflows has
+#    started. Inspect both workflow executions and conclude they
+#
 name: chain dispatcher
 
 on:
+  # NOTE: While this workflow currently isn't setup with push triggers, it
+  #       should have a push trigger to run on any kind of change.
   workflow_dispatch:
 
 jobs:
-  initial-job:
+  deploy_clusters:
     runs-on: ubuntu-20.04
+    name: Deploy ${{ matrix.cluster }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        cluster:
+          - 2i2c
+          - cloudbank
+
     steps:
-      # list workflows
-      # https://docs.github.com/en/rest/reference/actions#list-repository-workflows
-      - run: |
-          curl \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/actions/workflows
-      # create a workflow dispatch event
-      # https://docs.github.com/en/rest/reference/actions#create-a-workflow-dispatch-event
-      - env:
+      # These initial steps are deployment that are meant ot be done in
+      # sequence. They will do things known needed to be done in sequence such
+      # as deploying the support chart and cluster central staging hubs.
+      #
+      - name: Deploy support if needed
+        run: echo
+
+      - name: Deploy staging if needed
+        run: echo
+
+      - name: Deploy dask-staging if needed
+        run: echo
+
+      # The final part of the job is to do a lot of things in parallel. This
+      # could be to deploy a few staging+prod combination hubs or a bunch of
+      # prod-only hubs.
+      #
+      # This step dispatches one specific workflow to run twice, but does it in
+      # a way that could be programmatically decided. The dispatched workflow is
+      # also passed programmatically decided information.
+      #
+      - name: Dispatch chain workflows if needed
+        env:
+          # About WORKFLOW_PAT:
+          #
+          # This is a Personal Access Token (PAT) with "workflow" scope created
+          # by me at https://github.com/settings/tokens. In practice, we should
+          # create a GitHub 2i2c bot account which in turn creates this kind of
+          # token, and is granted access to specific repos where we use this
+          # strategy.
+          #
+          # The reason we don't use secrets.github_token is because GitHub have
+          # opted to not allow it permissions to dispatch workflows, afraid that
+          # it lead to never ending recursion by mistake. They allow the use of
+          # PATs for this still though.
+          #
+          # NOTE: While we could directly write secrets.WORKFLOW_PAT later
+          #       instead of referencing an environment variable, this
+          #       intermediary step helps us hide the value from being captured
+          #       by a command line history. Maybe this could be considered
+          #       safer, but maybe not.
+          #
           WORKFLOW_PAT: ${{ secrets.WORKFLOW_PAT }}
+          # About WORKFLOW_ID:
+          #
+          # To dispatch a specific workflow, we need its ID.
+          #
+          # Manual inspection of a REST API call that provides information about
+          # the workflows also provides the workflow ID of the workflow we want
+          # to dispatch.
+          #
+          # https://api.github.com/repos/consideratio/testing-gh-workflows/actions/workflows
+          #
+          WORKFLOW_ID: "21985128"
         run: |
-          curl \
-            -X POST \
-            -H "Authorization: token $WORKFLOW_PAT" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/actions/workflows/21985128/dispatches \
-            -d '{"ref":"main","inputs":{"cluster":"eriks_cluster","hub_1":"eriks_staging_hub","hub_2":"eriks_prod_hub"}}'
+          # For information about this REST API that triggers the another
+          # workflow to run, see:
+          # https://docs.github.com/en/rest/reference/actions#create-a-workflow-dispatch-event
+          
+          # Practically, we would have a loop here to make this request multiple
+          # times based on the hubs we want to deploy in parallel.
 
           curl \
             -X POST \
             -H "Authorization: token $WORKFLOW_PAT" \
             -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/actions/workflows/21985128/dispatches \
-            -d '{"ref":"main","inputs":{"cluster":"sarahs_cluster","hub_1":"sarahs_staging_hub","hub_2":"sarahs_prod_hub"}}'
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/${WORKFLOW_ID}/dispatches \
+            -d '{"ref":"main","inputs":{"cluster":"${{ matrix.cluster }}","hub_1":"x-staging","hub_2":"x-prod"}}'
+
+          curl \
+            -X POST \
+            -H "Authorization: token $WORKFLOW_PAT" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/${WORKFLOW_ID}/dispatches \
+            -d '{"ref":"main","inputs":{"cluster":"${{ matrix.cluster }}","hub_1":"y-staging","hub_2":"y-prod"}}'

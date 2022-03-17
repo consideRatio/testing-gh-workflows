@@ -1,3 +1,43 @@
+# This workflow includes a lot of notes I wrote as I iterated towards coming up
+# with the idea that is now examplified in chain.yaml and chain_dispatcher.yaml.
+# They are not relevant unless you are curious to learn about a lot of dead ends
+# I've explored.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # This is a GitHub workflow defining a set of jobs with a set of steps.
 # ref: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
 #

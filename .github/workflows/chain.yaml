@@ -1,3 +1,6 @@
+# This workflow is dispatched by the "chain dispatcher" workflow and is expected
+# to run in parallel a lot.
+#
 name: chain
 
 on:
@@ -16,25 +19,25 @@ on:
         required: true
         default: ""
         type: string
+      # concurrency:
+      #   description: 'A identifier to ensure we don't deploy the same hub combination'
+      #   required: true
+      #   type: string
 
 jobs:
-  job_1:
+  # TODO: Add sensible "concurrency" to ensure we don't deploy the same hub
+  #       concurrently if we happen to dispatch this workflow many times for
+  #       some reason. We may need to have that concurrency as workflow input.
+  #
+  deploy-up-to-two-hubs-in-sequence:
     runs-on: ubuntu-20.04
-    name: Deploy hub ${{ github.event.inputs.hub_2 }} to cluster ${{ github.event.inputs.cluster }}
+    name: "Deploy to ${{ github.event.inputs.cluster }}: ${{ github.event.inputs.hub_1 }} ${{ github.event.inputs.hub_2 }}"
+    # concurrency: ${{ github.event.inputs.concurrency }}
 
     steps:
-      - name: Deploy hub ${{ github.event.inputs.hub_2 }} to cluster ${{ github.event.inputs.cluster }}
-        run: |
-          echo Deploying hub ${{ github.event.inputs.hub_2 }} to cluster ${{ github.event.inputs.cluster }}...
-  
-  job_2:
-    runs-on: ubuntu-20.04
-    name: Deploy hub ${{ github.event.inputs.hub_2 }} to cluster ${{ github.event.inputs.cluster }}
-    
-    needs: job_1
-    if: ${{ github.event.inputs.hub_2 != '' }}
+      - name: "Deploy: ${{ github.event.inputs.cluster }}/${{ github.event.inputs.hub_1 }}"
+        run: echo
 
-    steps:
-      - name: Deploy hub ${{ github.event.inputs.hub_2 }} to cluster ${{ github.event.inputs.cluster }}
-        run: |
-          echo Deploying hub ${{ github.event.inputs.hub_2 }} to cluster ${{ github.event.inputs.cluster }}...
+      - name: "Deploy: ${{ github.event.inputs.cluster }}/${{ github.event.inputs.hub_2 }}"
+        if: ${{ github.event.inputs.hub_2 != '' }}
+        run: echo
