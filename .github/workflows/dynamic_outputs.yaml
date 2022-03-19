@@ -1,0 +1,76 @@
+# The goal in this workflow is to trial if I can define a job's outputs
+# dynamically using `needs.<previous job>.outputs`. This is to verify "job 3a"
+# as discussed in the referenced comment below.
+#
+# The challenge is that a job with `strategy.matrix` have outputs that will be
+# overridden if set by multiple variations of the job. Due to that, we could
+# workaround it by defining multiple separate job outputs where each job
+# variation would set different outputs. But, since we have a dynamic
+# `strategy.matrix`, we would need a dynamic `outputs` as well.
+#
+# I think key aspects for this relate to "context availability", where it is
+# clear that the `needs` context is available when declaring
+# `jobs.<job_id>.outputs.<output_id>`, but does that mean that we can set
+# `jobs.<job_id>.outputs` with all its output_id's dynamically, or we only can
+# set a hardcoded `output_id`'s value?
+#
+#
+# Reference
+# - Comment about "job 3a": https://github.com/2i2c-org/infrastructure/issues/1131#issuecomment-1072573736
+# - Context availability:   https://docs.github.com/en/actions/learn-github-actions/contexts#context-availability
+#
+# This workflow is dispatched by the "chain dispatcher" workflow and is expected
+# to run in parallel a lot.
+#
+name: chain
+
+on:
+  push:
+
+jobs:
+  test-set-static-outputs:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        id: ["a", "b"]
+    outputs:
+      a: "a-output-value"
+      b: "b-output-value"
+
+    steps:
+      - run: echo
+
+  test-read-static-outputs:
+    runs-on: ubuntu-20.04
+    needs: test-set-static-outputs
+
+    steps:
+      - run: |
+          echo '${{ toJson(needs.test-set-static-outputs.outputs) }}'
+
+  # test-set-dynamic-outputs-init:
+  #   runs-on: ubuntu-20.04
+  #   outputs:
+  #     dynamic_outputs: '{"a": "a-output-value", "b": "b-output-value"}'
+  #   steps:
+  #     - run: echo
+
+  # test-set-dynamic-outputs:
+  #   runs-on: ubuntu-20.04
+  #   needs: test-set-dynamic-outputs-init
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       id: ["a", "b"]
+  #   outputs: ${{ toJson(needs.test-set-dynamic-outputs-init.dynamic_outputs) }}
+
+  #   steps:
+  #     - run: echo
+
+  # test-read-dynamic-outputs:
+  #   runs-on: ubuntu-20.04
+  #   needs: test-set-dynamic-outputs
+
+  #   steps:
+  #     - run: echo ${{ toJson(needs.test-set-dynamic-outputs.outputs) }}
