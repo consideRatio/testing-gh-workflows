@@ -28,26 +28,26 @@ on:
   push:
 
 jobs:
-  # test-set-static-outputs:
-  #   runs-on: ubuntu-20.04
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       id: ["a", "b"]
-  #   outputs:
-  #     a: "a-output-value"
-  #     b: "b-output-value"
+  test-set-static-outputs:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        id: ["a", "b"]
+    outputs:
+      a: "a-output-value"
+      b: "b-output-value"
 
-  #   steps:
-  #     - run: echo
+    steps:
+      - run: echo
 
-  # test-read-static-outputs:
-  #   runs-on: ubuntu-20.04
-  #   needs: test-set-static-outputs
+  test-read-static-outputs:
+    runs-on: ubuntu-20.04
+    needs: test-set-static-outputs
 
-  #   steps:
-  #     - run: |
-  #         echo '${{ toJson(needs.test-set-static-outputs.outputs) }}'
+    steps:
+      - run: |
+          echo '${{ toJson(needs.test-set-static-outputs.outputs) }}'
 
   test-set-static-outputs-given-values-dynamically:
     runs-on: ubuntu-20.04
@@ -75,29 +75,29 @@ jobs:
           echo 'a: ${{ toJson(needs.test-set-static-outputs-given-values-dynamically.outputs.a) }}'
           echo 'b: ${{ toJson(needs.test-set-static-outputs-given-values-dynamically.outputs.b) }}'
 
-  # test-set-dynamic-outputs-init:
-  #   runs-on: ubuntu-20.04
-  #   outputs:
-  #     dynamic_outputs: '{"a": "a-output-value", "b": "b-output-value"}'
-  #   steps:
-  #     - run: echo
+  test-set-dynamic-outputs-init:
+    runs-on: ubuntu-20.04
+    outputs:
+      dynamic_outputs: '{"a": "a-output-value", "b": "b-output-value"}'
+    steps:
+      - run: echo
 
-  # test-set-dynamic-outputs:
-  #   runs-on: ubuntu-20.04
-  #   needs: test-set-dynamic-outputs-init
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       id: ["a", "b"]
-  #   outputs: ${{ toJson(needs.test-set-dynamic-outputs-init.dynamic_outputs) }}
+  test-set-dynamic-outputs:
+    runs-on: ubuntu-20.04
+    needs: test-set-dynamic-outputs-init
+    strategy:
+      fail-fast: false
+      matrix:
+        id: ["a", "b"]
+    outputs: ${{ toJson(needs.test-set-dynamic-outputs-init.dynamic_outputs) }}
 
-  #   steps:
-  #     - run: echo
+    steps:
+      - run: echo
 
-  # test-read-dynamic-outputs:
-  #   runs-on: ubuntu-20.04
-  #   needs: test-set-dynamic-outputs
+  test-read-dynamic-outputs:
+    runs-on: ubuntu-20.04
+    needs: test-set-dynamic-outputs
 
-  #   steps:
-  #     - run: |
-  #         echo '${{ toJson(needs.test-set-dynamic-outputs.outputs) }}'
+    steps:
+      - run: |
+          echo '${{ toJson(needs.test-set-dynamic-outputs.outputs) }}'
