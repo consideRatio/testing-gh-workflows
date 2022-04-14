@@ -79,13 +79,11 @@ jobs:
         run: |
           import json
 
-          test = r"""
+          json_string = r"""
           ${{ toJson(needs.test-set-static-outputs-given-values-dynamically.outputs) }}
           """
 
-          json.loads(test)
-          a = test["a"]
-          print(str(a))
+          print(json_string)
 
 
   # test-set-dynamic-outputs-init:
