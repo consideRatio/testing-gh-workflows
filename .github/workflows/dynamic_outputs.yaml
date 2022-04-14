@@ -84,7 +84,8 @@ jobs:
           """
 
           json.loads(test)
-          print(test["a"])
+          a = test["a"]
+          print(str(a))
 
 
   # test-set-dynamic-outputs-init:
