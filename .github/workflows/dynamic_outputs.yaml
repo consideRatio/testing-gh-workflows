@@ -80,7 +80,7 @@ jobs:
           import json
 
           json_string = r"""
-          ${{ toJson(needs.test-set-static-outputs-given-values-dynamically.outputs) }}
+          ${{ fromJson(needs.test-set-static-outputs-given-values-dynamically.outputs) }}
           """
 
           print(json_string)
