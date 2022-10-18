@@ -45,3 +45,14 @@ jobs:
 
       - run: |
           echo '${{ steps.setup-python.outputs.python-version }}'
+
+  no-quotes-no-variable:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/setup-python@v4
+        id: setup-python
+        with:
+          python-version: 3.10
+
+      - run: |
+          echo '${{ steps.setup-python.outputs.python-version }}'
