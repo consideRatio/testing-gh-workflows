@@ -1,0 +1,47 @@
+# This is a GitHub workflow defining a set of jobs with a set of steps.
+# ref: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
+#
+name: Test quotes
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  no-quotes:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: no-quotes
+            python-version: 3.10
+          - name: with-quotes
+            python-version: "3.10"
+    steps:
+      - uses: actions/setup-python@v4
+        id: setup-python
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - run: |
+          echo '${{ steps.setup-python.outputs.python-version }}'
+
+  with-quotes:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: no-quotes
+            python-version: 3.10
+          - name: with-quotes
+            python-version: "3.10"
+    steps:
+      - uses: actions/setup-python@v4
+        id: setup-python
+        with:
+          python-version: "${{ matrix.python-version }}"
+
+      - run: |
+          echo '${{ steps.setup-python.outputs.python-version }}'
