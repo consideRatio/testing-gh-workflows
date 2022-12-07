@@ -1,0 +1,15 @@
+# This is a GitHub workflow defining a set of jobs with a set of steps.
+# ref: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
+#
+name: Sleep
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  sleep:
+    runs-on: ubuntu-20.04
+    steps:
+      - run: |
+          sleep 120
