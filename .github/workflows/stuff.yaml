@@ -23,7 +23,12 @@ jobs:
                 direction: 'desc',
                 per_page: 100,
               });
-              const merged_pr = resp.data.find(pr => pr.merge_commit_sha === context.sha);
+              try {
+                const merged_pr = resp.data.find(pr => pr.merge_commit_sha === context.sha);
+              }
+              catch (error) {
+                // do nothing
+              }
               if (merged_pr) {
                 labels = merged_pr.labels;
               }
