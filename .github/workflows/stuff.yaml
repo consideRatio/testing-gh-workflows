@@ -25,15 +25,8 @@ jobs:
                   per_page: 100,
                 }
               );
-              try {
-                const merged_pr = resp.data.find(pr => pr.merge_commit_sha === context.sha);
-              }
-              catch {
-                core.warn('Failed to find a merged pull request');
-              }
-              if (merged_pr) {
-                labels = merged_pr.labels;
-              }
+              const merged_pr = resp.data.find(pr => pr.merge_commit_sha === context.sha);
+              labels = merged_pr?.labels;
             }
             else if (context.eventName === 'pull_request') {
               labels = context.payload.pull_request.labels;
