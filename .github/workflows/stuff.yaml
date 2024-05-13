@@ -23,10 +23,12 @@ jobs:
                 per_page: 100,
               });
               const merged_pr = resp.data.find(pr => pr.merge_commit_sha === context.sha);
-              labels = merged_pr?.labels;
+              if (merged_pr) {
+                labels = merged_pr.labels;
+              }
             }
             else if (github.eventName === 'pull_request') {
-              labels = context.payload?.pull_request?.labels;
+              labels = context.payload.pull_request.labels;
             }
             labels = (labels || []).map(l => l.name);
             return labels
