@@ -16,8 +16,8 @@ jobs:
             if (context.eventName === 'push') {
               // api ref: https://octokit.github.io/rest.js/v20#pulls-list
               const resp = await github.rest.pulls.list({
-                context.owner,
-                context.repo,
+                owner: context.owner,
+                repo: context.repo,
                 state: 'closed',
                 sort: 'updated',
                 direction: 'desc',
