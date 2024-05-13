@@ -15,14 +15,16 @@ jobs:
             let labels = [];
             if (context.eventName === 'push') {
               // api ref: https://octokit.github.io/rest.js/v20#pulls-list
-              const resp = await github.rest.pulls.list({
-                owner: context.owner,
-                repo: context.repo,
-                state: 'closed',
-                sort: 'updated',
-                direction: 'desc',
-                per_page: 100,
-              });
+              const resp = await github.rest.pulls.list(
+                {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  state: 'closed',
+                  sort: 'updated',
+                  direction: 'desc',
+                  per_page: 100,
+                }
+              );
               try {
                 const merged_pr = resp.data.find(pr => pr.merge_commit_sha === context.sha);
               }
