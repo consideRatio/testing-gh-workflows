@@ -13,6 +13,9 @@ jobs:
         with:
           script: |
             let labels = null;
+            if (github.eventName === 'pull_request') {
+              labels = context.payload.pull_request.labels;
+            }
             labels = (labels || []).map(l => l.name);
             return labels
 
