@@ -26,8 +26,8 @@ jobs:
               try {
                 const merged_pr = resp.data.find(pr => pr.merge_commit_sha === context.sha);
               }
-              catch (error) {
-                // do nothing
+              catch {
+                core.warn('Failed to find a merged pull request');
               }
               if (merged_pr) {
                 labels = merged_pr.labels;
