@@ -31,7 +31,7 @@ jobs:
             else if (context.eventName === 'pull_request') {
               labels = context.payload.pull_request.labels;
             }
-            // labels = (labels || []).map(l => l.name);
+            labels = (labels || []).map(l => l.name);
             return labels
 
       - name: Print result
