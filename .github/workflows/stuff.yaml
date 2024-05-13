@@ -13,7 +13,21 @@ jobs:
         with:
           script: |
             let labels = null;
-            if (github.eventName === 'pull_request') {
+            if (context.eventName === 'push') {
+              const resp = await github.rest.pulls.list({
+                context.owner,
+                context.repo,
+                sort: 'updated',
+                direction: 'desc',
+                state: 'closed',
+                per_page: 100
+              });
+              const merged_pr = resp.data.find(pr => pr.merge_commit_sha === context.sha);
+              if (merged_pr) {
+                labels = merged_pr.labels;
+              }
+            }
+            else if (context.eventName === 'pull_request') {
               labels = context.payload.pull_request.labels;
             }
             labels = (labels || []).map(l => l.name);
